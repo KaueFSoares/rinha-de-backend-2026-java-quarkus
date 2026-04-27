@@ -1,0 +1,38 @@
+services:
+  lb:
+    image: haproxy:alpine
+    container_name: lb
+    ports:
+      - "9999:9999"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - api1
+      - api2
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: "20MB"
+
+  api1:
+    image: rinha:latest
+    container_name: api1
+    environment:
+      - QUARKUS_HTTP_PORT=8080
+    deploy:
+      resources:
+        limits:
+          cpus: "0.45"
+          memory: "165MB"
+
+  api2:
+    image: rinha:latest
+    container_name: api2
+    environment:
+      - QUARKUS_HTTP_PORT=8080
+    deploy:
+      resources:
+        limits:
+          cpus: "0.45"
+          memory: "165MB"
