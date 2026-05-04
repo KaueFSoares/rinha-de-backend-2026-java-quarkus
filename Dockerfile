@@ -12,8 +12,9 @@ RUN ./mvnw -B -q -DskipTests dependency:go-offline
 
 COPY . .
 
-RUN ./mvnw package -Dnative -DskipTests
+RUN ./mvnw package -Dnative -DskipTests -Dquarkus.native.additional-build-args="-H:+UnlockExperimentalVMOptions,-H:+UseSerialGC"
 
+RUN strip /build/target/*-runner
 
 FROM quay.io/quarkus/ubi9-quarkus-micro-image:2.0
 
