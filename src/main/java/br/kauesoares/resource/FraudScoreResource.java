@@ -1,13 +1,15 @@
 package br.kauesoares.resource;
 
+import br.kauesoares.ResultEvaluator;
+import br.kauesoares.data.MccRiskDataset;
+import br.kauesoares.data.VectorDatasetLoader;
 import br.kauesoares.dto.Input;
 import br.kauesoares.InputMapper;
-import br.kauesoares.Normalizer;
+import br.kauesoares.InputNormalizer;
 import br.kauesoares.dto.RequestDTO;
 import br.kauesoares.dto.ScoreResponse;
 import br.kauesoares.VectorSearch;
-import br.kauesoares.data.VectorStore;
-import jakarta.inject.Inject;
+import br.kauesoares.data.VectorDataset;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -19,23 +21,15 @@ import jakarta.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class FraudScoreResource {
 
-    private static final float THRESHOLD = 0.6f;
+    private final InputMapper inputMapper = new InputMapper(new MccRiskDataset());
+    private final InputNormalizer inputNormalizer = new InputNormalizer();
+    private final VectorDataset vectorDataset = new VectorDatasetLoader().load();
+    private final VectorSearch vectorSearch = new VectorSearch(vectorDataset);
+    private final ResultEvaluator resultEvaluator = new ResultEvaluator(vectorDataset);
 
-    @Inject
-    InputMapper mapper;
-    @Inject
-    Normalizer normalizer;
-    @Inject
-    VectorSearch search;
-
-    private final ThreadLocal<Input> TL_INPUT =
-            ThreadLocal.withInitial(Input::new);
-
-    private final ThreadLocal<float[]> TL_VEC =
-            ThreadLocal.withInitial(() -> new float[14]);
-
-    private final ThreadLocal<int[]> TL_IDX =
-            ThreadLocal.withInitial(() -> new int[5]);
+    private final ThreadLocal<Input> TL_INPUT = ThreadLocal.withInitial(Input::new);
+    private final ThreadLocal<float[]> TL_VEC = ThreadLocal.withInitial(() -> new float[14]);
+    private final ThreadLocal<int[]> TL_IDX = ThreadLocal.withInitial(() -> new int[5]);
 
     @POST
     public ScoreResponse score(RequestDTO request) {
@@ -44,21 +38,10 @@ public class FraudScoreResource {
         float[] vec = TL_VEC.get();
         int[] idx = TL_IDX.get();
 
-        mapper.map(request, input);
-        normalizer.normalize(input, vec);
-        search.top5(vec, idx);
+        inputMapper.map(request, input);
+        inputNormalizer.normalize(input, vec);
+        vectorSearch.top5(vec, idx);
 
-        int fraudCount =
-                VectorStore.flags[idx[0]] +
-                        VectorStore.flags[idx[1]] +
-                        VectorStore.flags[idx[2]] +
-                        VectorStore.flags[idx[3]] +
-                        VectorStore.flags[idx[4]];
-
-        float fraudScore = fraudCount * 0.2f;
-
-        boolean approved = fraudScore < THRESHOLD;
-
-        return new ScoreResponse(approved, fraudScore);
+        return resultEvaluator.evaluate(idx);
     }
 }

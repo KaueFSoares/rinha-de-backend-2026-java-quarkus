@@ -1,9 +1,6 @@
 package br.kauesoares.data;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
-@ApplicationScoped
-public class MccRiskStore {
+public class MccRiskDataset {
     public float get(String mcc) {
         return switch (mcc) {
             case "5411" -> 0.15f;
