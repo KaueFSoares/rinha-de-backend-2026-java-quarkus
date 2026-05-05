@@ -13,7 +13,7 @@ public class ResultEvaluator {
         this.vectorDataset = vectorDataset;
     }
 
-    public ScoreResponse evaluate(int[] idx) {
+    public ScoreResponse evaluate(int[] idx, ScoreResponse out) {
         int fraudCount =
                 vectorDataset.flags[idx[0]] +
                         vectorDataset.flags[idx[1]] +
@@ -21,10 +21,9 @@ public class ResultEvaluator {
                         vectorDataset.flags[idx[3]] +
                         vectorDataset.flags[idx[4]];
 
-        float fraudScore = fraudCount * 0.2f;
+        out.fraudScore = fraudCount * 0.2f;
+        out.approved   = out.fraudScore < THRESHOLD;
 
-        boolean approved = fraudScore < THRESHOLD;
-
-        return new ScoreResponse(approved, fraudScore);
+        return out;
     }
 }

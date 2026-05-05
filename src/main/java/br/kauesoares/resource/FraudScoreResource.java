@@ -30,6 +30,7 @@ public class FraudScoreResource {
     private final ThreadLocal<Input> TL_INPUT = ThreadLocal.withInitial(Input::new);
     private final ThreadLocal<float[]> TL_VEC = ThreadLocal.withInitial(() -> new float[14]);
     private final ThreadLocal<int[]> TL_IDX = ThreadLocal.withInitial(() -> new int[5]);
+    private final ThreadLocal<ScoreResponse> TL_RESP = ThreadLocal.withInitial(ScoreResponse::new);
 
     @POST
     public ScoreResponse score(RequestDTO request) {
@@ -37,11 +38,12 @@ public class FraudScoreResource {
         Input input = TL_INPUT.get();
         float[] vec = TL_VEC.get();
         int[] idx = TL_IDX.get();
+        ScoreResponse resp = TL_RESP.get();
 
         inputMapper.map(request, input);
         inputNormalizer.normalize(input, vec);
         vectorSearch.top5(vec, idx);
 
-        return resultEvaluator.evaluate(idx);
+        return resultEvaluator.evaluate(idx, resp);
     }
 }
