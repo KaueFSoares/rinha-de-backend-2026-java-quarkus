@@ -20,6 +20,6 @@ public final class Input {
     public float kmHome;
 
     public boolean hasLast;
-    public float minutesSince;
+    public double minutesSince;
     public float kmLast;
 }
