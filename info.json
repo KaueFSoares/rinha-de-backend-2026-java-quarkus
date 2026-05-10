@@ -1,0 +1,7 @@
+{
+  "participants": ["Kauê Soares"],
+  "social": ["https://github.com/KaueFSoares", "https://www.linkedin.com/in/kauefmsoares"],
+  "source-code-repo": "https://github.com/KaueFSoares/rinha-de-backend-2026-java-quarkus",
+  "stack": ["java", "quarkus", "graalvm", "haproxy"],
+  "open_to_work": false
+}
