@@ -1,19 +1,10 @@
 package br.kauesoares.resource;
 
-import br.kauesoares.ResultEvaluator;
-import br.kauesoares.data.MccRiskDataset;
-import br.kauesoares.data.VectorDatasetLoader;
+import br.kauesoares.dto.*;
 import br.kauesoares.dto.Input;
-import br.kauesoares.InputMapper;
-import br.kauesoares.InputNormalizer;
-import br.kauesoares.dto.RequestDTO;
-import br.kauesoares.dto.ScoreResponse;
-import br.kauesoares.VectorSearch;
-import br.kauesoares.data.VectorDataset;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("/fraud-score")
@@ -21,29 +12,32 @@ import jakarta.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class FraudScoreResource {
 
-    private final InputMapper inputMapper = new InputMapper(new MccRiskDataset());
-    private final InputNormalizer inputNormalizer = new InputNormalizer();
-    private final VectorDataset vectorDataset = new VectorDatasetLoader().load();
-    private final VectorSearch vectorSearch = new VectorSearch(vectorDataset);
-    private final ResultEvaluator resultEvaluator = new ResultEvaluator(vectorDataset);
+    @Inject
+    FraudEngine engine;
 
-    private final ThreadLocal<Input> TL_INPUT = ThreadLocal.withInitial(Input::new);
-    private final ThreadLocal<float[]> TL_VEC = ThreadLocal.withInitial(() -> new float[14]);
-    private final ThreadLocal<int[]> TL_IDX = ThreadLocal.withInitial(() -> new int[5]);
-    private final ThreadLocal<ScoreResponse> TL_RESP = ThreadLocal.withInitial(ScoreResponse::new);
+    private final ThreadLocal<Input> TL_INPUT =
+            ThreadLocal.withInitial(Input::new);
+
+    private final ThreadLocal<float[]> TL_VEC =
+            ThreadLocal.withInitial(() -> new float[14]);
+
+    private final ThreadLocal<byte[]> TL_FLAGS =
+            ThreadLocal.withInitial(() -> new byte[5]);
+
+    private final ThreadLocal<ScoreResponse> TL_RESP =
+            ThreadLocal.withInitial(ScoreResponse::new);
 
     @POST
     public ScoreResponse score(RequestDTO request) {
 
         Input input = TL_INPUT.get();
         float[] vec = TL_VEC.get();
-        int[] idx = TL_IDX.get();
+        byte[] flags = TL_FLAGS.get();
         ScoreResponse resp = TL_RESP.get();
 
-        inputMapper.map(request, input);
-        inputNormalizer.normalize(input, vec);
-        vectorSearch.top5(vec, idx);
-
-        return resultEvaluator.evaluate(idx, resp);
+        engine.inputMapper.map(request, input);
+        engine.inputNormalizer.normalize(input, vec);
+        engine.vectorSearch.top5(vec, flags);
+        return engine.resultEvaluator.evaluate(flags, resp);
     }
 }

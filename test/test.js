@@ -74,6 +74,14 @@ export default function () {
         }
     } else {
         errorCount.add(1);
+
+        console.error(
+            `[HTTP ERROR] iteration=${idx} status=${res.status} error=${res.error}`
+        );
+
+        console.error(`Response body: ${res.body}`);
+
+        console.error(`Request payload: ${JSON.stringify(entry.request)}`);
     }
 }
 
