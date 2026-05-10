@@ -1,0 +1,34 @@
+name: Publish Image
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        run: |
+          docker build \
+            -t ghcr.io/${{ github.repository_owner }}/rinha-backend-2026:latest \
+            .
+
+      - name: Push
+        run: |
+          docker push \
+            ghcr.io/${{ github.repository_owner }}/rinha-backend-2026:latest
