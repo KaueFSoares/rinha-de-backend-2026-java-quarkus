@@ -1,7 +1,5 @@
 package br.kauesoares;
 
-import br.kauesoares.data.VectorDataset;
-
 public class VectorSearch {
 
     private static final int DIM = 14;
@@ -25,25 +23,31 @@ public class VectorSearch {
     private final int[] leafStart;
     private final int[] leafLen;
 
-    private final int[] buildIndices;
-
     // Per-thread search state (avoids GC and concurrency issues)
     private static final class SearchState {
         final float[] resDist = new float[K + 1];
         final int[] resIdx = new int[K + 1];
-        final int[] stack = new int[MAX_NODES];
+
+        final int[] stack = new int[64];
+
         int resSize;
         float resTau;
         int stackTop;
     }
 
+    private static void printMem(String label) {
+        Runtime rt = Runtime.getRuntime();
+        long used = rt.totalMemory() - rt.freeMemory();
+        System.out.printf("%-20s: %.2f MB%n", label, used / 1024.0 / 1024.0);
+    }
+
     private final ThreadLocal<SearchState> tlState =
             ThreadLocal.withInitial(SearchState::new);
 
-    public VectorSearch(VectorDataset dataset) {
-        this.vectors = dataset.vectors;
-        this.flags = dataset.flags;
-        this.size = dataset.size;
+    public VectorSearch(float[] vectors, byte[] flags, int size) {
+        this.vectors = vectors;
+        this.flags = flags;
+        this.size = size;
 
         vpNode = new int[MAX_NODES];
         vpThresh = new float[MAX_NODES];
@@ -54,8 +58,10 @@ public class VectorSearch {
         leafLen = new int[MAX_NODES];
         leafPoints = new int[size];
 
-        buildIndices = new int[size];
-        for (int i = 0; i < size; i++) buildIndices[i] = i;
+        int[] buildIndices = new int[size];
+        for (int i = 0; i < size; i++) {
+            buildIndices[i] = i;
+        }
 
         buildVPTree(buildIndices, 0, size);
     }

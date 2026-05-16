@@ -5,7 +5,6 @@ import br.kauesoares.data.*;
 import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
 
-@Startup
 @ApplicationScoped
 public class FraudEngine {
 
@@ -17,7 +16,7 @@ public class FraudEngine {
     public FraudEngine() {
         this.inputMapper = new InputMapper(new MccRiskDataset());
         this.inputNormalizer = new InputNormalizer();
-        this.vectorSearch = new VectorSearch(new VectorDatasetLoader().load());
+        this.vectorSearch = new VectorDatasetLoader().load();
         this.resultEvaluator = new ResultEvaluator();
     }
 }
