@@ -26,6 +26,8 @@ RUN chown 1001 /work \
 
 COPY --from=builder --chown=1001:root --chmod=0755 /build/target/*-runner /work/application
 
+COPY data.bin /work/data.bin
+
 EXPOSE 8080
 USER 1001
 

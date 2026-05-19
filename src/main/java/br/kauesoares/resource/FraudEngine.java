@@ -2,7 +2,6 @@ package br.kauesoares.resource;
 
 import br.kauesoares.*;
 import br.kauesoares.data.*;
-import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
