@@ -21,7 +21,8 @@ services:
     volumes:
       - ./api.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     depends_on:
-      - core
+      core:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -34,7 +35,8 @@ services:
     volumes:
       - ./api.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     depends_on:
-      - core
+      core:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -42,10 +44,20 @@ services:
           memory: "25MB"
 
   core:
-    image: rinha:latest
+    image: rinha
     container_name: core
     environment:
       - QUARKUS_HTTP_PORT=8080
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/localhost/8080 && printf 'GET /ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && read line <&3 && [ \"$$line\" = 'HTTP/1.1 200 OK\r' ]"
+        ]
+      interval: 1s
+      timeout: 20s
+      retries: 20
+      start_period: 1s
     deploy:
       resources:
         limits:
